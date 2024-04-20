@@ -1,16 +1,30 @@
-export const App = () => {
+import { useState } from 'react';
+import { Container } from './App.styled';
+import { Searchbar } from './Searchbar/Searchbar';
+import { ToastContainer } from 'react-toastify';
+import ImageGallery from './ImageGallery/ImageGallery';
+import 'react-toastify/dist/ReactToastify.css';
+
+export function App() {
+  const [imgName, setImgName] = useState('');
+
   return (
-    <div
-      style={{
-        height: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        fontSize: 40,
-        color: '#010101'
-      }}
-    >
-      React homework template
-    </div>
+    <Container>
+      <Searchbar onSubmit={setImgName} />
+      <ImageGallery imgInfo={imgName} />
+
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </Container>
   );
-};
+}
