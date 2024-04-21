@@ -15,6 +15,7 @@ export default function ImageGallery({ imgInfo }) {
   const [showLoadMore, setShowLoadMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // обнуляємо стейт, якщо прийшов новий imgInfo
   useEffect(() => {
     setCurrentPage(1);
     setCapture(null);
@@ -23,46 +24,52 @@ export default function ImageGallery({ imgInfo }) {
   }, [imgInfo]);
 
   useEffect(() => {
+    // відключаємо useEffect доки не зявиться imgInfo
     if (!imgInfo) {
-      return;
+      return; 
     }
 
-    setIsLoading(true);
+    // оголошуэмо функцію по запросу фото з серверу
+    async function getImages() {
+      try {
+        setIsLoading(true); //включаємо спінер
 
-    const capture = API.getImages(imgInfo, currentPage);
+        const capture = await API.getImages(imgInfo, currentPage); //запрос на сервер АРІ
 
-    capture
-      .then(capture => {
-        setCapture(capture);
-        const totalPages = Math.ceil(capture.totalHits / 12);
+        setCapture(capture);//зберегаємо об'єкт картинок з сервера у стейт 
+
+        const totalPages = Math.ceil(capture.totalHits / 12); //розраховуємо кількість сторінок
 
         if (capture.total === 0) {
-          throw new Error(`Oops! "${imgInfo}" - нема таких світлин`);
+          throw new Error(`Oops! "${imgInfo}" - нема таких світлин`); //создаємо error, якщо повернувся пустий об'єкт
         }
 
         capture &&
           toast.success(
-            `Знайдено ${capture.totalHits} світлин. Завантажено: ${currentPage} з ${totalPages} сторінок.`
+            `Знайдено ${capture.totalHits} світлин. Завантажено: ${currentPage} з ${totalPages} сторінок.` //виводимо повідомлення, кількість фото
           );
 
-        const optimalImages = optimaizerImageList(capture.hits);
+        const optimalImages = optimaizerImageList(capture.hits); //создаємо новий об'єкт без зайвої інфи
 
-        setCapture(capture);
-        setImages(prevImages => [...prevImages, ...optimalImages]);
-        setIsLoading(false);
-        setShowLoadMore(totalPages === currentPage ? false : true);
-      })
-      .catch(error => {
-        setError(error);
-        setIsLoading(false);
-        setShowLoadMore(false);
+        setImages(prevImages => [...prevImages, ...optimalImages]); // добавляємо нові фото для виводу у стейт
+        setIsLoading(false);                                        //виключаємо спінер
+        setShowLoadMore(totalPages === currentPage ? false : true); //визначаємо чи виводити Load More
+      } catch (error) {
+        setError(error);          //зберыгаэио error у стейт
+        setIsLoading(false);      //виключаємо спінер
+        setShowLoadMore(false);   //виключаємо Load More
 
-        toast.error(`${error}`);
+        toast.error(`${error}`);   //виводимо повідомлення з error
 
-        console.log('error', error);
-      });
+        console.log('error', error); //виводимо error у консоль
+      }
+    }
+
+    getImages(); //запускаємо функцію
   }, [imgInfo, currentPage]);
 
+
+// оптимызуэмо об'єкт фото
   const optimaizerImageList = images => {
     return images.map(({ id, tags, largeImageURL, webformatURL }) => ({
       id,
